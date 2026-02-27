@@ -21,32 +21,37 @@ def _is_admin(user_id: int) -> bool:
     return user_id in ADMIN_IDS
 
 
+CERTIF_TEXT = (
+    "𝑺𝑻𝑨𝑭𝑭 𝑪𝑬𝑹𝑻𝑰𝑭𝑰𝑬́ 𝑫𝑬 𝑳𝑨 𝑷𝑰𝑹𝑬́𝑬\n"
+    "___\n"
+    "\n"
+    "ω Développeur 👨🏽‍💻\n"
+    "—> @jbsshi ✅\n"
+    "\n"
+    "ω C*C 💳\n"
+    "—> \n"
+    "\n"
+    "ω Formation 📵\n"
+    "—> @socrate_vbv ✅\n"
+    "\n"
+    "ω NL/DB 📇\n"
+    "—> @Silentleadsbot ✅\n"
+    "\n"
+    "ω Exchanger ™️\n"
+    "—>"
+)
+
+
 async def certif_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """
-    /certif — Affiche la liste des membres certifiés et du staff.
+    /certif — Affiche le staff certifié.
     Accessible à tous les utilisateurs.
     """
     msg = update.effective_message
     if not msg:
         return
 
-    members = get_certified_members()
-
-    if not members:
-        await msg.reply_text(
-            f"📋 **Staff & Membres certifiés — {CHANNEL_NAME}**\n\n"
-            f"Aucun membre certifié pour le moment.",
-            parse_mode="Markdown",
-        )
-        return
-
-    lines = [f"📋 **Staff & Membres certifiés — {CHANNEL_NAME}**\n"]
-    for m in members:
-        name = m["username"] or m["first_name"] or str(m["user_id"])
-        display = f"@{name}" if m["username"] else f"[{m['first_name']}](tg://user?id={m['user_id']})"
-        lines.append(f"• {display} — _{m['role']}_")
-
-    await msg.reply_text("\n".join(lines), parse_mode="Markdown")
+    await msg.reply_text(CERTIF_TEXT)
 
 
 async def addcertif_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:

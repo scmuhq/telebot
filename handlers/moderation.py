@@ -18,8 +18,10 @@ from config import (
     MAIN_GROUP_ID,
     ADMIN_IDS,
     BLACKLISTED_WORDS,
-    TEMP_BAN_DURATION,
 )
+
+# Durée du mute pour mot interdit (30 minutes)
+BLACKLIST_MUTE_DURATION = 30 * 60
 from database import add_warning, get_warning_count
 
 logger = logging.getLogger(__name__)
@@ -74,16 +76,29 @@ async def blacklist_filter(update: Update, context: ContextTypes.DEFAULT_TYPE) -
         except Exception as e:
             logger.warning("Could not delete blacklisted message: %s", e)
 
-        # Temp ban (1 hour)
-        until = datetime.now(timezone.utc) + timedelta(seconds=TEMP_BAN_DURATION)
+        # Mute 30 minutes (l'utilisateur reste dans le groupe mais ne peut plus écrire)
+        until = datetime.now(timezone.utc) + timedelta(seconds=BLACKLIST_MUTE_DURATION)
+        muted_permissions = ChatPermissions(
+            can_send_messages=False,
+            can_send_audios=False,
+            can_send_documents=False,
+            can_send_photos=False,
+            can_send_videos=False,
+            can_send_video_notes=False,
+            can_send_voice_notes=False,
+            can_send_polls=False,
+            can_send_other_messages=False,
+            can_add_web_page_previews=False,
+        )
         try:
-            await context.bot.ban_chat_member(
+            await context.bot.restrict_chat_member(
                 chat_id=MAIN_GROUP_ID,
                 user_id=user.id,
+                permissions=muted_permissions,
                 until_date=until,
             )
         except Exception as e:
-            logger.error("Could not temp-ban user %s: %s", user.id, e)
+            logger.error("Could not mute user %s: %s", user.id, e)
 
         try:
             await context.bot.send_message(
@@ -91,7 +106,7 @@ async def blacklist_filter(update: Update, context: ContextTypes.DEFAULT_TYPE) -
                 text=(
                     f"🚫 Message supprimé — mot interdit détecté.\n"
                     f"L'utilisateur [{user.first_name}](tg://user?id={user.id}) "
-                    f"a été banni temporairement (1 heure)."
+                    f"a été muté pendant 30 minutes."
                 ),
                 parse_mode="Markdown",
             )
