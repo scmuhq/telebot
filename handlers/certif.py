@@ -21,25 +21,56 @@ def _is_admin(user_id: int) -> bool:
     return user_id in ADMIN_IDS
 
 
-CERTIF_TEXT = (
-    "𝑺𝑻𝑨𝑭𝑭 𝑪𝑬𝑹𝑻𝑰𝑭𝑰𝑬́ 𝑫𝑬 𝑳𝑨 𝑷𝑰𝑹𝑬́𝑬\n"
-    "___\n"
-    "\n"
-    "ω Développeur 👨🏽‍💻\n"
-    "—> @jbsshi ✅\n"
-    "\n"
-    "ω C*C 💳\n"
-    "—> \n"
-    "\n"
-    "ω Formation 📵\n"
-    "—> @socrate_vbv ✅\n"
-    "\n"
-    "ω NL/DB 📇\n"
-    "—> @Silentleadsbot ✅\n"
-    "\n"
-    "ω Exchanger ™️\n"
-    "—>"
-)
+# Sections du staff avec leurs membres par défaut
+STAFF_SECTIONS = [
+    ("Développeur 👨🏽‍💻", ["@jbsshi"]),
+    ("C*C 💳", []),
+    ("Formation 📵", ["@socrate_vbv"]),
+    ("NL/DB 📇", ["@Silentleadsbot"]),
+    ("Exchanger ™️", []),
+]
+
+# Mapping des noms de rôle vers les noms de section (pour matcher /addcertif)
+ROLE_TO_SECTION = {
+    "développeur": "Développeur 👨🏽‍💻",
+    "dev": "Développeur 👨🏽‍💻",
+    "c*c": "C*C 💳",
+    "cc": "C*C 💳",
+    "formation": "Formation 📵",
+    "nl/db": "NL/DB 📇",
+    "nl": "NL/DB 📇",
+    "db": "NL/DB 📇",
+    "exchanger": "Exchanger ™️",
+}
+
+
+def _build_certif_text() -> str:
+    """Construit le message /certif dynamiquement avec les membres de la BDD."""
+    members = get_certified_members()
+
+    # Grouper les membres dynamiques par section
+    dynamic_by_section: dict[str, list[str]] = {}
+    for m in members:
+        role_lower = m["role"].lower().strip()
+        section_name = ROLE_TO_SECTION.get(role_lower)
+        if section_name:
+            name = f"@{m['username']}" if m["username"] else m["first_name"] or str(m["user_id"])
+            dynamic_by_section.setdefault(section_name, []).append(name)
+
+    lines = ["𝑺𝑻𝑨𝑭𝑭 𝑪𝑬𝑹𝑻𝑰𝑭𝑰𝑬́ 𝑫𝑬 𝑳𝑨 𝑷𝑰𝑹𝑬́𝑬", "___", ""]
+
+    for section_name, defaults in STAFF_SECTIONS:
+        lines.append(f"ω {section_name}")
+        # Membres par défaut + membres dynamiques
+        all_members = defaults + dynamic_by_section.get(section_name, [])
+        if all_members:
+            for name in all_members:
+                lines.append(f"—> {name} ✅")
+        else:
+            lines.append("—>")
+        lines.append("")
+
+    return "\n".join(lines).rstrip()
 
 
 async def certif_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -51,7 +82,7 @@ async def certif_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     if not msg:
         return
 
-    await msg.reply_text(CERTIF_TEXT)
+    await msg.reply_text(_build_certif_text())
 
 
 async def addcertif_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -79,8 +110,7 @@ async def addcertif_command(update: Update, context: ContextTypes.DEFAULT_TYPE) 
 
     add_certified_member(target.id, target.username, target.first_name, role)
     await msg.reply_text(
-        f"✅ {target.first_name} a été ajouté(e) comme **{role}**.",
-        parse_mode="Markdown",
+        f"✅ {target.first_name} a été ajouté(e) comme {role}.",
     )
 
 
