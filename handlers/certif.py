@@ -27,7 +27,10 @@ STAFF_SECTIONS = [
     ("C*C 💳", []),
     ("Formation 📵", ["@socrate_vbv"]),
     ("NL/DB 📇", ["@Silentleadsbot"]),
-    ("Exchanger ™️", []),
+    ("Exchanger ™️", ["@micodesousfrozenn"]),
+    ("Sender SMS/MAIL 📩", []),
+    ("All*teur 📞", []),
+    ("Escrow 🏁", []),
 ]
 
 # Mapping des noms de rôle vers les noms de section (pour matcher /addcertif)
@@ -41,6 +44,13 @@ ROLE_TO_SECTION = {
     "nl": "NL/DB 📇",
     "db": "NL/DB 📇",
     "exchanger": "Exchanger ™️",
+    "sender": "Sender SMS/MAIL 📩",
+    "sender sms/mail": "Sender SMS/MAIL 📩",
+    "sms": "Sender SMS/MAIL 📩",
+    "mail": "Sender SMS/MAIL 📩",
+    "all*teur": "All*teur 📞",
+    "alloteur": "All*teur 📞",
+    "escrow": "Escrow 🏁",
 }
 
 
