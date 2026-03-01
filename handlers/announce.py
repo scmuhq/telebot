@@ -7,7 +7,7 @@ import logging
 from telegram import Update
 from telegram.ext import ContextTypes, CommandHandler
 
-from config import ADMIN_IDS
+from config import ADMIN_IDS, MAIN_GROUP_ID
 from database import get_all_bot_users
 
 logger = logging.getLogger(__name__)
@@ -64,7 +64,43 @@ async def announce_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -
     )
 
 
+async def msg_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """
+    /msg <message>
+    Le bot envoie le message dans le groupe principal en son nom.
+    Réservé aux admins. La commande d'origine est supprimée.
+    """
+    msg = update.effective_message
+    if not msg or not msg.from_user:
+        return
+    if not _is_admin(msg.from_user.id):
+        await msg.reply_text("❌ Commande réservée aux administrateurs.")
+        return
+
+    if not context.args:
+        await msg.reply_text("⚠️ Usage : `/msg Votre message ici`", parse_mode="Markdown")
+        return
+
+    text = " ".join(context.args)
+
+    # Supprimer la commande d'origine
+    try:
+        await msg.delete()
+    except Exception:
+        pass
+
+    # Envoyer le message en tant que bot dans le groupe
+    try:
+        await context.bot.send_message(
+            chat_id=MAIN_GROUP_ID,
+            text=text,
+        )
+    except Exception as e:
+        logger.error("Could not send /msg: %s", e)
+
+
 def get_handlers() -> list:
     return [
         CommandHandler("announce", announce_command),
+        CommandHandler("msg", msg_command),
     ]
